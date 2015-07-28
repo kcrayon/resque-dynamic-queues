@@ -20,6 +20,7 @@ module Resque
           queue_names = @queues.dup
 
           return queues_without_dynamic if queue_names.grep(/(^!)|(^@)|(\*)/).size == 0
+          return @dynamic_queues if @dynamic_queues && @last_dynamic_update && (Time.now - @last_dynamic_update) < 60
 
           real_queues = Resque.queues
           matched_queues = []
@@ -54,7 +55,10 @@ module Resque
             end
           end
 
-          return matched_queues.uniq.sort
+          @dynamic_queues = matched_queues.uniq.sort
+          @last_dynamic_update = Time.now
+
+          return @dynamic_queues
         end
 
 
